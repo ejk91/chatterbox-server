@@ -12,6 +12,7 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 //instantiate a results array
+
 var results = [];
 
 exports.requestHandler = function(request, response) {
@@ -19,7 +20,7 @@ exports.requestHandler = function(request, response) {
   var defaultCorsHeaders = {
     'access-control-allow-origin': '*',
     'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'access-control-allow-headers': 'content-type, accept',
+    'access-control-allow-headers': 'content-type, accept, X-Parse-Application-Id,  X-Parse-REST-API-Key',
     'access-control-max-age': 10 // Seconds.
   };
 
@@ -64,44 +65,48 @@ exports.requestHandler = function(request, response) {
   // node to actually send all the data over to the client.
 
 
-
-
+  var body = [];
 
   //upon receipt of data from the request, push that data into the results array
   if ((request.method === 'POST') && (request.url === '/classes/messages')) {
     request.on('data', function (chunk) {
-      results.push(JSON.parse(chunk));
-      statusCode = 201;
-      response.writeHead(statusCode);
+      body.push(chunk);
+      response.writeHead(201, headers);
     });
 
     request.on('error', function (error) {
-      console.error(error);
-      statusCode = 400;
-      response.writeHead(statusCode);
+      // console.error(error);
+      response.writeHead(400, headers);
       response.end();
     });
 
     request.on('end', function () {
+      // console.log(results);
+      body = Buffer.concat(body).toString();
+      results.push(body);
       response.end();
     });
 
     //also do request method GET
   } else if ((request.method === 'GET') && (request.url === '/classes/messages')) {
     request.on('error', function (error) {
-      statusCode = 400;
-      response.writeHead(statusCode);
+      response.writeHead(400, headers);
       response.end();
     });
     // console.log('get', results);
+    // console.log(response);
     response.end(JSON.stringify({results}));
   } else if ((request.method === 'OPTIONS')) {
-    statusCode = 200;
-    response.writeHead(statusCode);
+
+    request.on('error', function (error) {
+      response.writeHead(400, headers);
+      reponse.end();
+    });
+
+    response.writeHead(200, headers);
     response.end();
   } else {
-    statusCode = 404;
-    response.writeHead(statusCode);
+    response.writeHead(404, headers);
     response.end();
   }
 
