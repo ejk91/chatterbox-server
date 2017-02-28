@@ -11,8 +11,18 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+//instantiate a results array
+var results = [];
 
-var requestHandler = function(request, response) {
+exports.requestHandler = function(request, response) {
+
+  var defaultCorsHeaders = {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'access-control-allow-headers': 'content-type, accept',
+    'access-control-max-age': 10 // Seconds.
+  };
+
   // Request and Response come from node's http module.
   //
   // They include information about both the incoming request, such as
@@ -39,7 +49,7 @@ var requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
+  headers['Content-Type'] = 'application/json';
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
@@ -52,7 +62,54 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+
+
+
+
+
+  //upon receipt of data from the request, push that data into the results array
+  if ((request.method === 'POST') && (request.url === '/classes/messages')) {
+    request.on('data', function (chunk) {
+      results.push(JSON.parse(chunk));
+      statusCode = 201;
+      response.writeHead(statusCode);
+    });
+
+    request.on('error', function (error) {
+      console.error(error);
+      statusCode = 400;
+      response.writeHead(statusCode);
+      response.end();
+    });
+
+    request.on('end', function () {
+      response.end();
+    });
+
+    //also do request method GET
+  } else if ((request.method === 'GET') && (request.url === '/classes/messages')) {
+    request.on('error', function (error) {
+      statusCode = 400;
+      response.writeHead(statusCode);
+      response.end();
+    });
+    // console.log('get', results);
+    response.end(JSON.stringify({results}));
+  } else if ((request.method === 'OPTIONS')) {
+    statusCode = 200;
+    response.writeHead(statusCode);
+    response.end();
+  } else {
+    statusCode = 404;
+    response.writeHead(statusCode);
+    response.end();
+  }
+
+  //once finished, respond to the request with the stringified results in a JSON object
+
+//coment
+
+
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -62,12 +119,6 @@ var requestHandler = function(request, response) {
 // Your chat client is running from a url like file://your/chat/client/index.html,
 // which is considered a different domain.
 //
-// Another way to get around this restriction is to serve you chat
+// Another way to get around this restriction is to serve your chat
 // client from this domain by setting up static file serving.
-var defaultCorsHeaders = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'access-control-allow-headers': 'content-type, accept',
-  'access-control-max-age': 10 // Seconds.
-};
 
