@@ -11,6 +11,8 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var querystring = require('querystring');
+
 //instantiate a results array
 
 var results = [];
@@ -82,9 +84,9 @@ exports.requestHandler = function(request, response) {
 
     request.on('end', function () {
       // console.log(results);
-      body = Buffer.concat(body).toString();
+      body = querystring.parse(Buffer.concat(body).toString());
       results.push(body);
-      response.end();
+      response.end(JSON.stringify({results}));
     });
 
     //also do request method GET
