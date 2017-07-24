@@ -32,4 +32,3 @@ exports.makeActionHandler = function(actionMap) {
     }
   };
 };
-
